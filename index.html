@@ -1,0 +1,689 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday, Felicia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper: #f3e8d2;
+    --paper-dark: #e8d9b8;
+    --ink: #4a3626;
+    --ink-soft: #6b5340;
+    --rose: #c3738a;
+    --rose-deep: #a85468;
+    --gold: #c0974f;
+    --sky: #8aa9c9;
+  }
+
+  *{box-sizing:border-box;}
+
+  html,body{
+    margin:0;
+    padding:0;
+    min-height:100%;
+    width:100%;
+    overflow-x:hidden;
+    background:
+      radial-gradient(circle at 20% 20%, #fbe9ef 0%, transparent 45%),
+      radial-gradient(circle at 80% 70%, #e8f0fb 0%, transparent 45%),
+      linear-gradient(135deg, #f6ede0 0%, #eee0ca 50%, #f3e6d6 100%);
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--ink);
+  }
+
+  /* ---------- floating background petals ---------- */
+  .bg-petals{
+    position:fixed; inset:0; pointer-events:none; z-index:0; overflow:hidden;
+  }
+  .bg-petals span{
+    position:absolute; top:-40px; font-size: 20px; opacity:.55;
+    animation: drift linear infinite;
+  }
+  @keyframes drift{
+    0%{ transform: translateY(-5vh) translateX(0) rotate(0deg); }
+    100%{ transform: translateY(110vh) translateX(40px) rotate(360deg); }
+  }
+
+  /* ================= COVER SCREEN ================= */
+  #cover{
+    position:relative; z-index:2;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center;
+    padding: 40px 20px;
+    transition: opacity .7s ease, visibility .7s ease;
+  }
+  #cover.hidden{ opacity:0; visibility:hidden; position:absolute; pointer-events:none; }
+
+  .cover-title{
+    font-family:'Caveat', cursive;
+    font-size: clamp(2.6rem, 8vw, 4.8rem);
+    color: var(--rose-deep);
+    margin: 10px 0 4px;
+    text-shadow: 1px 1px 0 rgba(255,255,255,.4);
+  }
+  .cover-sub{
+    font-size: clamp(1.05rem, 2.6vw, 1.35rem);
+    color: var(--ink-soft);
+    font-style: italic;
+    margin: 0 0 28px;
+  }
+
+  .polaroid{
+    background: #fffaf0;
+    padding: 14px 14px 46px;
+    box-shadow: 0 14px 30px -10px rgba(74,54,38,.35), 0 2px 4px rgba(74,54,38,.15);
+    transform: rotate(-3deg);
+    border-radius: 2px;
+    position:relative;
+    max-width: 290px;
+    width: 72vw;
+  }
+  .polaroid img{
+    width:100%; height: auto; display:block;
+    aspect-ratio: 4/5; object-fit: cover;
+    background: linear-gradient(135deg,#f0e4cf,#e3d2b2);
+  }
+  .polaroid figcaption{
+    font-family:'Caveat', cursive;
+    font-size: 1.4rem;
+    color: var(--rose-deep);
+    text-align:center;
+    margin-top: 10px;
+  }
+  .polaroid .tape{
+    position:absolute; width:70px; height:26px;
+    background: rgba(255,255,255,.55);
+    border:1px solid rgba(0,0,0,.05);
+    box-shadow: 0 2px 4px rgba(0,0,0,.08);
+    top:-12px; left:50%; transform: translateX(-50%) rotate(-4deg);
+  }
+
+  .open-btn{
+    margin-top: 34px;
+    font-family:'Cormorant Garamond', serif;
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: var(--rose-deep);
+    color: #fff6ec;
+    border:none;
+    padding: 14px 34px;
+    border-radius: 30px;
+    cursor:pointer;
+    box-shadow: 0 10px 20px -8px rgba(168,84,104,.6);
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+  .open-btn:hover{ transform: translateY(-2px); box-shadow: 0 14px 24px -8px rgba(168,84,104,.7); }
+  .open-btn:active{ transform: translateY(0); }
+
+  /* ================= DIARY SCREEN ================= */
+  #diaryScreen{
+    position:relative; z-index:2;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding: 30px 14px 50px;
+    opacity:0; visibility:hidden; position:absolute; inset:0;
+    transition: opacity .7s ease, visibility .7s ease;
+  }
+  #diaryScreen.active{ opacity:1; visibility:visible; position:relative; }
+
+  .book-wrap{
+    perspective: 2400px;
+    width: min(640px, 92vw);
+  }
+
+  .book{
+    position:relative;
+    width:100%;
+    aspect-ratio: 3/4;
+    max-height: 72vh;
+  }
+
+  .page{
+    position:absolute; inset:0;
+    background: var(--paper);
+    border-radius: 3px;
+    box-shadow:
+      0 18px 40px -16px rgba(74,54,38,.45),
+      inset 0 0 0 1px rgba(255,255,255,.3);
+    transform-style: preserve-3d;
+    transform-origin: left center;
+    transition: transform .9s cubic-bezier(.45,.05,.2,1);
+    overflow:hidden;
+    backface-visibility: hidden;
+  }
+
+  .page::before{ /* paper grain */
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(74,54,38,.015) 0 1px, transparent 1px 3px),
+      radial-gradient(circle at 15% 85%, rgba(74,54,38,.06), transparent 55%),
+      radial-gradient(circle at 92% 10%, rgba(74,54,38,.05), transparent 55%);
+  }
+
+  .page::after{ /* dog-ear fold, bottom right */
+    content:""; position:absolute; right:0; bottom:0; width:34px; height:34px;
+    background: linear-gradient(135deg, transparent 50%, #e2cfa8 50%);
+    box-shadow: -2px -2px 5px rgba(74,54,38,.25);
+    border-bottom-right-radius: 3px;
+  }
+
+  .page.turned{ transform: rotateY(-178deg); }
+  .page .face{
+    position:absolute; inset:0;
+    backface-visibility: hidden;
+    padding: 34px 30px 26px;
+    display:flex; flex-direction:column;
+  }
+  .page .face.back{ transform: rotateY(180deg); }
+
+  .page-flower{ position:absolute; opacity:.85; pointer-events:none; }
+  .page-flower.tl{ top:6px; left:4px; width:64px; transform: rotate(-8deg); }
+  .page-flower.br{ bottom:10px; right:10px; width:58px; transform: rotate(14deg) scaleX(-1); }
+  .page-flower.tr-sm{ top:10px; right:8px; width:40px; transform: rotate(10deg); opacity:.6;}
+
+  .page-number{
+    font-family:'Caveat', cursive;
+    font-size: 1.1rem;
+    color: var(--gold);
+    text-align:center;
+    margin-top:auto;
+    padding-top: 10px;
+  }
+
+  .entry-head{
+    font-family:'Caveat', cursive;
+    color: var(--rose-deep);
+    font-size: clamp(1.3rem, 4vw, 1.7rem);
+    margin: 0 0 10px;
+    text-align:center;
+  }
+
+  .entry-text{
+    font-size: clamp(.95rem, 2.1vw, 1.12rem);
+    line-height: 1.55;
+    color: var(--ink);
+    overflow-y: auto;
+    padding-right: 4px;
+    flex: 1 1 auto;
+  }
+  .entry-text::-webkit-scrollbar{ width:4px; }
+  .entry-text::-webkit-scrollbar-thumb{ background: rgba(192,151,79,.4); border-radius:4px; }
+
+  .entry-text p{ margin: 0 0 12px; }
+  .entry-text .drop{
+    font-family:'Caveat', cursive;
+    font-size: 1.5em;
+    color: var(--rose-deep);
+  }
+
+  .page-photo{
+    display:block; margin: 6px auto 14px;
+    width: 58%; max-width: 170px;
+    border: 6px solid #fffaf0;
+    box-shadow: 0 8px 18px -6px rgba(74,54,38,.4);
+  }
+
+  /* nav controls */
+  .nav-row{
+    display:flex; align-items:center; justify-content:center; gap:22px;
+    margin-top: 22px;
+  }
+  .nav-btn{
+    width:46px; height:46px; border-radius:50%;
+    border: 1px solid rgba(74,54,38,.25);
+    background: #fffaf0;
+    color: var(--rose-deep);
+    font-size: 1.3rem;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    box-shadow: 0 6px 14px -6px rgba(74,54,38,.35);
+    transition: transform .2s ease, opacity .2s ease;
+    user-select:none;
+  }
+  .nav-btn:active{ transform: scale(.92); }
+  .nav-btn.disabled{ opacity:.3; pointer-events:none; }
+
+  .dots{ display:flex; gap:6px; }
+  .dots span{
+    width:6px; height:6px; border-radius:50%;
+    background: rgba(74,54,38,.25);
+    transition: background .3s ease, transform .3s ease;
+  }
+  .dots span.active{ background: var(--rose-deep); transform: scale(1.4); }
+
+  .hint{
+    margin-top:12px; font-size:.85rem; color: var(--ink-soft); font-style:italic;
+    text-align:center; opacity:.75;
+  }
+
+  /* ================= FINALE ================= */
+  #finale{
+    position:relative; z-index:2;
+    min-height:100vh;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; padding: 40px 20px;
+    opacity:0; visibility:hidden; position:absolute; inset:0;
+    transition: opacity .9s ease, visibility .9s ease;
+  }
+  #finale.active{ opacity:1; visibility:visible; position:relative; }
+
+  .finale-title{
+    font-family:'Caveat', cursive;
+    font-size: clamp(2.4rem, 7.5vw, 4.2rem);
+    color: var(--rose-deep);
+    margin-bottom: 8px;
+  }
+  .finale-sub{ color:var(--ink-soft); font-style:italic; margin-bottom:26px; font-size: clamp(1rem,2.4vw,1.2rem); }
+
+  .finale .polaroid{ margin-bottom: 10px; }
+
+  .replay-btn{
+    margin-top: 20px;
+    background: transparent;
+    border: 1.5px solid var(--rose-deep);
+    color: var(--rose-deep);
+    font-family:'Cormorant Garamond', serif;
+    font-size: 1rem;
+    letter-spacing: .5px;
+    padding: 10px 26px;
+    border-radius: 30px;
+    cursor:pointer;
+    transition: background .25s ease, color .25s ease;
+  }
+  .replay-btn:hover{ background: var(--rose-deep); color:#fff6ec; }
+
+  /* canvas overlay for fireworks */
+  #fxCanvas{ position:fixed; inset:0; z-index:5; pointer-events:none; }
+
+  /* ribbons */
+  .ribbon{
+    position:fixed; top:-30px; z-index:6; pointer-events:none;
+    width: 10px; height: 26px; border-radius: 2px;
+    animation: fall linear forwards;
+  }
+  @keyframes fall{
+    to{ transform: translateY(115vh) rotate(540deg); opacity: .9; }
+  }
+
+  @media (max-width: 420px){
+    .page .face{ padding: 24px 18px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- floating background petals -->
+<div class="bg-petals" id="bgPetals"></div>
+
+<!-- canvas for fireworks -->
+<canvas id="fxCanvas"></canvas>
+
+<!-- ============ SVG FLOWER SYMBOLS (hand-drawn style, reused everywhere) ============ -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="flower-rose" viewBox="0 0 100 100">
+      <g fill="none" stroke="#a85468" stroke-width="2.2" stroke-linecap="round">
+        <path d="M50 78 C 46 60, 40 55, 42 40" fill="none"/>
+        <path d="M42 46 C 34 44, 30 38, 24 40" fill="none"/>
+        <path d="M44 54 C 38 56, 32 54, 28 58" fill="none"/>
+      </g>
+      <g>
+        <ellipse cx="50" cy="32" rx="13" ry="10" fill="#e3a0ae" opacity="0.9" transform="rotate(10 50 32)"/>
+        <ellipse cx="40" cy="26" rx="11" ry="9" fill="#d98a9b" opacity="0.85" transform="rotate(-18 40 26)"/>
+        <ellipse cx="60" cy="27" rx="11" ry="9" fill="#d98a9b" opacity="0.85" transform="rotate(20 60 27)"/>
+        <ellipse cx="50" cy="20" rx="10" ry="8" fill="#eab3bf" opacity="0.9"/>
+        <circle cx="50" cy="28" r="6" fill="#c3738a"/>
+      </g>
+      <g fill="#8aa96f">
+        <ellipse cx="34" cy="48" rx="8" ry="4" transform="rotate(-30 34 48)"/>
+        <ellipse cx="30" cy="62" rx="7" ry="3.5" transform="rotate(-10 30 62)"/>
+      </g>
+    </symbol>
+
+    <symbol id="flower-daisy" viewBox="0 0 100 100">
+      <g stroke="#8aa96f" stroke-width="2" fill="none" stroke-linecap="round">
+        <path d="M50 90 C 48 70, 52 60, 50 45"/>
+        <path d="M50 70 C 42 68, 38 72, 32 70"/>
+      </g>
+      <g fill="#fdf6e8" stroke="#e3cf9a" stroke-width="1">
+        <ellipse cx="50" cy="26" rx="6" ry="14"/>
+        <ellipse cx="50" cy="26" rx="6" ry="14" transform="rotate(45 50 26)"/>
+        <ellipse cx="50" cy="26" rx="6" ry="14" transform="rotate(90 50 26)"/>
+        <ellipse cx="50" cy="26" rx="6" ry="14" transform="rotate(135 50 26)"/>
+      </g>
+      <circle cx="50" cy="26" r="8" fill="#c0974f"/>
+      <g fill="#8aa96f">
+        <ellipse cx="34" cy="78" rx="7" ry="3.5" transform="rotate(-20 34 78)"/>
+      </g>
+    </symbol>
+
+    <symbol id="flower-sprig" viewBox="0 0 100 100">
+      <path d="M50 92 C 48 70, 54 50, 50 20" stroke="#8aa96f" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <g fill="#c3738a" opacity="0.9">
+        <circle cx="50" cy="20" r="6"/>
+        <circle cx="40" cy="30" r="5"/>
+        <circle cx="60" cy="32" r="5"/>
+        <circle cx="46" cy="42" r="4.5"/>
+        <circle cx="56" cy="46" r="4.5"/>
+      </g>
+      <g fill="#8aa96f">
+        <ellipse cx="40" cy="60" rx="9" ry="4" transform="rotate(-25 40 60)"/>
+        <ellipse cx="60" cy="68" rx="9" ry="4" transform="rotate(20 60 68)"/>
+        <ellipse cx="38" cy="82" rx="8" ry="3.6" transform="rotate(-15 38 82)"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<!-- ============ COVER ============ -->
+<section id="cover">
+  <svg width="38" viewBox="0 0 100 100" style="margin-bottom:-6px;"><use href="#flower-sprig"/></svg>
+  <h1 class="cover-title">Happy Birthday,<br>Felicia</h1>
+  <p class="cover-sub">a little diary, just for you 🥹❤️</p>
+
+  <figure class="polaroid">
+    <div class="tape"></div>
+    <img id="coverPhoto" src="assets/felicia.png" alt="Felicia"
+         onerror="this.closest('.polaroid').classList.add('no-photo')">
+    <figcaption>my person. my Felicia.</figcaption>
+  </figure>
+
+  <button class="open-btn" id="openBtn">Open the diary</button>
+</section>
+
+<!-- ============ DIARY ============ -->
+<section id="diaryScreen">
+  <div class="book-wrap">
+    <div class="book" id="book"><!-- pages injected by JS --></div>
+  </div>
+  <div class="nav-row">
+    <div class="nav-btn" id="prevBtn">&#10094;</div>
+    <div class="dots" id="dots"></div>
+    <div class="nav-btn" id="nextBtn">&#10095;</div>
+  </div>
+  <p class="hint">tap the arrow to turn the page</p>
+</section>
+
+<!-- ============ FINALE ============ -->
+<section id="finale">
+  <h2 class="finale-title">I love you forever,<br>Felicia 🥹❤️</h2>
+  <p class="finale-sub">happy birthday, my first baby gurl</p>
+  <figure class="polaroid">
+    <div class="tape"></div>
+    <img id="finalePhoto" src="assets/felicia.png" alt="Felicia"
+         onerror="this.closest('.polaroid').classList.add('no-photo')">
+    <figcaption>over six years, and counting</figcaption>
+  </figure>
+  <button class="replay-btn" id="replayBtn">read it again</button>
+</section>
+
+<script>
+/* ================= PAGE CONTENT ================= */
+/* Each entry = one leaf of the diary. "photo" (optional) shows the picture on that page. */
+const entries = [
+  {
+    head: "my girl, my person, my Felicia",
+    html: `<p><span class="drop">W</span>here do I even begin? How do I put over six years of friendship, countless memories, laughter, tears, arguments, forgiveness, and unconditional love into one birthday message?</p>
+           <p>Honestly, I don't think words will ever be enough to express how much you mean to me.</p>`
+  },
+  {
+    head: "class 6, all the way till now",
+    html: `<p>Feli, if someone had told me back in Class 6 that the girl I was becoming friends with would become such an important part of my life, I probably wouldn't have understood just how special that would be. Look at us now 🥹</p>
+           <p>From class 6 all the way now, and all the different phases of life we've experienced together. We've literally grown together. We've watched each other change, learn, make mistakes, overcome things and become the people we are today. And through it all, somehow, we have continued to choose this friendship.</p>`
+  },
+  {
+    head: "'Nana Addo' 😭😭",
+    html: `<p>Sometimes I sit and think about all the memories we've made, and honestly, WHERE DO I EVEN START? 😭😂 Do you remember back in the day when you were bathing and that whole incident happened — 'Nana Addo' 😭😭 I'm not even going to say much because you already know EXACTLY what I'm talking about!</p>
+           <p>Some of our memories are genuinely unforgettable, and some are so funny that I wonder how we even survived those moments without laughing ourselves to tears. From the little things to the big things, from the embarrassing moments to the random conversations, we have accumulated so many memories that I wish I could put them all in a little box and keep them forever. If only we could go back and relive some of those days!</p>`
+  },
+  {
+    head: "six whole years",
+    html: `<p>Over six years, Feli. SIX WHOLE YEARS! And when I look back, I realise that I haven't just gained a friend in you. I've gained a sister, a safe place, a confidante, a supporter and one of the greatest blessings God has ever given me.</p>
+           <p>You've been there for me through come what may. Through the good days when everything was beautiful and the difficult days when things weren't so easy. You've seen different versions of me, even the versions I wasn't particularly proud of, and yet you've remained. You've listened to me, supported me, stood by me and loved me in ways that I will never take for granted.</p>`
+  },
+  {
+    head: "us, of course 😭😂",
+    html: `<p>And of course, we cannot talk about our friendship without mentioning our argument — I mean it's you, of course 😭😂 Because we have definitely had our moments! We've disagreed, gotten upset, misunderstood each other and sometimes allowed our differences to get in the way.</p>
+           <p>And honestly, most of the time, I know I can be the problem 😭😭 Sometimes you too, because let's not pretend you're always innocent 😂❤️ But what I love most about us is that we never allow our disagreements to become bigger than the friendship we've built. We find our way back to each other. We talk, we forgive, we understand and we keep going. And that, to me, is one of the most beautiful things about us.</p>`
+  },
+  {
+    head: "a thousand times over",
+    html: `<p>I hope you know that I never take your presence in my life for granted. Not even for a second. I am grateful for every single memory, every silly conversation, every laugh, every little moment, every disagreement we've overcome, and even the difficult times that have taught us how to love and understand each other better.</p>
+           <p>If I could go back to Class 6 and choose my friends all over again, I would still choose you. A thousand times over. I would choose you in every lifetime, in every classroom, in every circumstance. Because having you in my life is something I would never want to miss out on.</p>`,
+    photo: true
+  },
+  {
+    head: "a little prayer for you",
+    html: `<p>On this day, I pray that God blesses you beyond anything you could ever imagine. May He grant you the desires of your heart, protect you wherever you go, order your steps and surround you with the same genuine love and kindness you have shown me.</p>
+           <p>May you never have to beg for the love you so freely give. May you never feel alone, may your heart never lack reasons to smile, and may life be extraordinarily beautiful to you. I pray that you achieve everything you've ever dreamed of and become everything you've ever wanted to be. You deserve beautiful things, my baby 🥹❤️</p>`
+  },
+  {
+    head: "wherever life takes us",
+    html: `<p>And please, never forget — no matter where life takes us, no matter how much we grow, how many things change, or how many new people we meet, you will always have a special place in my heart.</p>
+           <p>We may not always agree, we may not always understand each other, and we may have our moments, but I hope we never lose what we have. I hope that years from now, we'll look back at these school memories, laugh about all the silly things we did, remember all our little fights, bring up those embarrassing moments 😂🤪 and be grateful that we had each other through it all.</p>`
+  },
+  {
+    head: "thank you for staying",
+    html: `<p>Thank you for being Felicia. Thank you for being my friend — infact my best friend 🥹❤️❤️ I love youuu. Thank you for staying. Thank you for loving me even when I'm not the easiest person to deal with. Thank you for being one of the people who have made my life a little softer, happier, and more meaningful.</p>
+           <p>I don't say it enough, but I LOVE YOU. I love you so soooo soooo much. More than this could ever explain. And if there's one thing I hope you carry with you today, it's the knowledge that somewhere in this world, there is someone who is genuinely, deeply and endlessly grateful that you exist.</p>`
+  },
+  {
+    head: "here's to more, Feli",
+    html: `<p>Happy birthday, my baby girl. My best friend and my over-six-years-and-counting girl. My Felicia 🥹❤️</p>
+           <p>Here's to more birthdays, more memories, more laughter, more adventures, more growth, and many, many more years of friendship.</p>
+           <p>If I had to do all these six-plus years again, I'd still want you beside me. Every single time.</p>
+           <p>I LOVE YOU FOREVER, FELICIA. HAPPY BIRTHDAY, MY FIRST BABY GURL ❤️🥹🥹🥹</p>`
+  },
+  {
+    head: "one last thing, before you sleep",
+    html: `<p>And Feli, I know I've missed your birthdays over the past years, and I am genuinely sorry. You know your girl would never intentionally do that, and I hope you never once thought it was because you weren't important to me 🥹🥹</p>
+           <p>This year, I really didn't want to miss the chance to make you feel special. I know you probably expected me to be among the first to wish you, but I wanted to be the last — so that as your birthday comes to an end, you would have one more reminder of how much you mean to me 🥹❤️ and of course, the last thing on your mind before sleep should be mee 😭🫠</p>
+           <p>Thank you for never forgetting me, even in the years I couldn't show up for you. You still celebrated me, wished me and made me feel special, and I will never take that for granted. I'm sorry for the times I fell short. I hope you know that my missing your birthdays never meant I loved you any less — I mean, I don't even have to ask, afterall I'm your love 🤭🤭</p>
+           <p>You've been such a beautiful part of my life, and if there's one thing I never want to miss, it's having you in my life. I love you love you love you LOVE YOU SOOOO MUCH my babyyy 🥹❤️❤️</p>`
+  }
+];
+
+/* ================= BUILD PAGES ================= */
+const book = document.getElementById('book');
+const flowersByIndex = ['flower-rose','flower-daisy','flower-sprig'];
+
+entries.forEach((entry, i) => {
+  const page = document.createElement('div');
+  page.className = 'page';
+  page.style.zIndex = entries.length - i;
+
+  const flowerFront = flowersByIndex[i % flowersByIndex.length];
+  const flowerBack = flowersByIndex[(i + 1) % flowersByIndex.length];
+
+  page.innerHTML = `
+    <div class="face front">
+      <svg class="page-flower tl" viewBox="0 0 100 100"><use href="#${flowerFront}"/></svg>
+      <svg class="page-flower br" viewBox="0 0 100 100"><use href="#${flowerBack}"/></svg>
+      <h3 class="entry-head">${entry.head}</h3>
+      ${entry.photo ? `<img class="page-photo" src="assets/felicia.png" alt="Felicia" onerror="this.style.display='none'">` : ''}
+      <div class="entry-text">${entry.html}</div>
+      <div class="page-number">page ${i + 1} of ${entries.length}</div>
+    </div>
+    <div class="face back">
+      <svg class="page-flower tr-sm" viewBox="0 0 100 100"><use href="#${flowerBack}"/></svg>
+    </div>
+  `;
+  book.appendChild(page);
+});
+
+const pages = Array.from(document.querySelectorAll('.page'));
+let current = 0;
+
+/* dots */
+const dotsWrap = document.getElementById('dots');
+entries.forEach((_, i) => {
+  const d = document.createElement('span');
+  if (i === 0) d.classList.add('active');
+  dotsWrap.appendChild(d);
+});
+const dotEls = Array.from(dotsWrap.children);
+
+function updateDots(){
+  dotEls.forEach((d, i) => d.classList.toggle('active', i === current));
+}
+function updateNavButtons(){
+  document.getElementById('prevBtn').classList.toggle('disabled', current === 0);
+  document.getElementById('nextBtn').classList.toggle('disabled', current === pages.length);
+}
+
+function turnNext(){
+  if (current >= pages.length) return;
+  pages[current].classList.add('turned');
+  smallBurst();
+  current++;
+  if (current === pages.length) {
+    setTimeout(showFinale, 850);
+  }
+  updateDots();
+  updateNavButtons();
+}
+function turnPrev(){
+  if (current <= 0) return;
+  current--;
+  pages[current].classList.remove('turned');
+  updateDots();
+  updateNavButtons();
+}
+
+document.getElementById('nextBtn').addEventListener('click', turnNext);
+document.getElementById('prevBtn').addEventListener('click', turnPrev);
+document.getElementById('book').addEventListener('click', (e) => {
+  if (e.target.closest('.nav-btn')) return;
+  turnNext();
+});
+
+/* ================= SCREEN TRANSITIONS ================= */
+document.getElementById('openBtn').addEventListener('click', () => {
+  document.getElementById('cover').classList.add('hidden');
+  document.getElementById('diaryScreen').classList.add('active');
+  updateNavButtons();
+});
+
+function showFinale(){
+  document.getElementById('diaryScreen').classList.remove('active');
+  document.getElementById('finale').classList.add('active');
+  bigCelebration();
+}
+
+document.getElementById('replayBtn').addEventListener('click', () => {
+  pages.forEach(p => p.classList.remove('turned'));
+  current = 0;
+  updateDots();
+  updateNavButtons();
+  document.getElementById('finale').classList.remove('active');
+  document.getElementById('diaryScreen').classList.add('active');
+});
+
+/* ================= BACKGROUND PETALS ================= */
+(function petals(){
+  const wrap = document.getElementById('bgPetals');
+  const glyphs = ['🌸','🌷','🌼','❀','✿'];
+  for (let i = 0; i < 14; i++){
+    const s = document.createElement('span');
+    s.textContent = glyphs[i % glyphs.length];
+    s.style.left = Math.random() * 100 + 'vw';
+    s.style.animationDuration = (14 + Math.random() * 14) + 's';
+    s.style.animationDelay = (Math.random() * -20) + 's';
+    s.style.fontSize = (14 + Math.random() * 14) + 'px';
+    wrap.appendChild(s);
+  }
+})();
+
+/* ================= RIBBON CONFETTI ================= */
+const ribbonColors = ['#c3738a','#c0974f','#8aa9c9','#8aa96f','#e3a0ae'];
+function spawnRibbons(n){
+  for (let i = 0; i < n; i++){
+    const r = document.createElement('div');
+    r.className = 'ribbon';
+    const color = ribbonColors[Math.floor(Math.random() * ribbonColors.length)];
+    r.style.background = color;
+    r.style.left = Math.random() * 100 + 'vw';
+    r.style.animationDuration = (2.6 + Math.random() * 1.8) + 's';
+    r.style.width = (6 + Math.random() * 8) + 'px';
+    r.style.height = (18 + Math.random() * 16) + 'px';
+    document.body.appendChild(r);
+    setTimeout(() => r.remove(), 4800);
+  }
+}
+function smallBurst(){ spawnRibbons(8); }
+function bigCelebration(){
+  spawnRibbons(40);
+  setTimeout(() => spawnRibbons(30), 500);
+  fireworksLoop();
+}
+
+/* ================= FIREWORKS (canvas) ================= */
+const canvas = document.getElementById('fxCanvas');
+const ctx = canvas.getContext('2d');
+function resizeCanvas(){ canvas.width = innerWidth; canvas.height = innerHeight; }
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
+let particles = [];
+const fwColors = ['#c3738a','#eab3bf','#c0974f','#8aa9c9','#fdf6e8','#8aa96f'];
+
+function launchFirework(x, y){
+  const count = 34;
+  for (let i = 0; i < count; i++){
+    const angle = (Math.PI * 2 * i) / count;
+    const speed = 1.6 + Math.random() * 2.4;
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 60 + Math.random() * 20,
+      color: fwColors[Math.floor(Math.random() * fwColors.length)]
+    });
+  }
+}
+
+let fwRunning = false;
+function fireworksLoop(){
+  if (fwRunning) return;
+  fwRunning = true;
+  let bursts = 0;
+  const interval = setInterval(() => {
+    launchFirework(
+      innerWidth * (0.2 + Math.random() * 0.6),
+      innerHeight * (0.2 + Math.random() * 0.35)
+    );
+    bursts++;
+    if (bursts >= 6){ clearInterval(interval); }
+  }, 550);
+  requestAnimationFrame(animateParticles);
+}
+
+function animateParticles(){
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  particles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.025;
+    p.life -= 1;
+    ctx.globalAlpha = Math.max(p.life / 80, 0);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 2.4, 0, Math.PI * 2);
+    ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+  particles = particles.filter(p => p.life > 0);
+  if (particles.length > 0 || fwRunning){
+    requestAnimationFrame(animateParticles);
+  } else {
+    fwRunning = false;
+  }
+}
+</script>
+</body>
+</html>
