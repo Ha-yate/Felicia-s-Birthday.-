@@ -388,7 +388,7 @@
 
   <figure class="polaroid">
     <div class="tape"></div>
-    <img id="coverPhoto" src="assets/felicia.png" alt="Felicia"
+    <img id="coverPhoto" src="felicia.png" alt="Felicia"
          onerror="this.closest('.polaroid').classList.add('no-photo')">
     <figcaption>my person. my Felicia.</figcaption>
   </figure>
@@ -415,7 +415,7 @@
   <p class="finale-sub">happy birthday, my first baby gurl</p>
   <figure class="polaroid">
     <div class="tape"></div>
-    <img id="finalePhoto" src="assets/felicia.png" alt="Felicia"
+    <img id="finalePhoto" src="felicia.png" alt="Felicia"
          onerror="this.closest('.polaroid').classList.add('no-photo')">
     <figcaption>over six years, and counting</figcaption>
   </figure>
@@ -505,7 +505,7 @@ entries.forEach((entry, i) => {
       <svg class="page-flower tl" viewBox="0 0 100 100"><use href="#${flowerFront}"/></svg>
       <svg class="page-flower br" viewBox="0 0 100 100"><use href="#${flowerBack}"/></svg>
       <h3 class="entry-head">${entry.head}</h3>
-      ${entry.photo ? `<img class="page-photo" src="assets/felicia.png" alt="Felicia" onerror="this.style.display='none'">` : ''}
+      ${entry.photo ? `<img class="page-photo" src="felicia.png" alt="Felicia" onerror="this.style.display='none'">` : ''}
       <div class="entry-text">${entry.html}</div>
       <div class="page-number">page ${i + 1} of ${entries.length}</div>
     </div>
